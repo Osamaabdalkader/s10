@@ -1,13 +1,12 @@
-// js/referral.js - نظام الإحالة والشبكة
+// js/referral.js - Referral System (English function names)
 class ReferralSystem {
-    // إنشاء رمز إحالة جديد للمستخدم
+    // Create new referral code for user
     static async createReferralCode() {
         try {
             if (!currentUser) {
-                throw new Error('يجب تسجيل الدخول لإنشاء رمز إحالة');
+                throw new Error('User must be logged in to create referral code');
             }
 
-            // إنشاء رمز فريد (حروف وأرقام عشوائية)
             const code = this.generateReferralCode(8);
             
             const { data, error } = await supabase
@@ -29,7 +28,7 @@ class ReferralSystem {
         }
     }
 
-    // توليد رمز إحالة عشوائي
+    // Generate random referral code
     static generateReferralCode(length = 8) {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         let result = '';
@@ -39,7 +38,7 @@ class ReferralSystem {
         return result;
     }
 
-    // الحصول على رمز إحالة المستخدم
+    // Get user's referral code
     static async getUserReferralCode() {
         try {
             if (!currentUser) return null;
@@ -51,7 +50,7 @@ class ReferralSystem {
                 .eq('is_active', true)
                 .single();
 
-            if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows returned
+            if (error && error.code !== 'PGRST116') throw error;
             
             return data;
         } catch (error) {
@@ -60,10 +59,9 @@ class ReferralSystem {
         }
     }
 
-    // معالجة الإحالة عند التسجيل
+    // Process referral during registration
     static async processReferral(referralCode, newUserId) {
         try {
-            // البحث عن صاحب رمز الإحالة
             const { data: codeData, error: codeError } = await supabase
                 .from('referral_codes')
                 .select('*, user:user_id(*)')
@@ -72,17 +70,15 @@ class ReferralSystem {
                 .single();
 
             if (codeError || !codeData) {
-                console.log('رمز الإحالة غير صحيح أو غير نشط');
+                console.log('Invalid or inactive referral code');
                 return false;
             }
 
-            // التحقق من الحد الأقصى لاستخدام الرمز
             if (codeData.max_uses && codeData.current_uses >= codeData.max_uses) {
-                console.log('تم الوصول إلى الحد الأقصى لاستخدام هذا الرمز');
+                console.log('Maximum uses reached for this referral code');
                 return false;
             }
 
-            // إنشاء سجل الإحالة
             const { data: referralData, error: referralError } = await supabase
                 .from('referrals')
                 .insert([{
@@ -96,7 +92,6 @@ class ReferralSystem {
 
             if (referralError) throw referralError;
 
-            // تحديث عدد استخدامات الرمز
             await supabase
                 .from('referral_codes')
                 .update({ 
@@ -105,10 +100,7 @@ class ReferralSystem {
                 })
                 .eq('id', codeData.id);
 
-            // بناء الشبكة الهرمية
             await this.buildNetworkTree(newUserId, codeData.user_id);
-
-            // تحديث إحصائيات الشبكة
             await this.updateNetworkStats(codeData.user_id);
 
             return true;
@@ -118,10 +110,9 @@ class ReferralSystem {
         }
     }
 
-    // بناء الشجرة الهرمية للشبكة
+    // Build hierarchical network tree
     static async buildNetworkTree(newUserId, parentId) {
         try {
-            // الحصول على معلومات الأب في الشبكة
             const { data: parentData, error: parentError } = await supabase
                 .from('network_tree')
                 .select('*')
@@ -136,7 +127,6 @@ class ReferralSystem {
                 lineagePath = [...parentData.lineage_path, parentId];
             }
 
-            // إضافة المستخدم الجديد إلى الشجرة
             const { error: treeError } = await supabase
                 .from('network_tree')
                 .insert([{
@@ -148,7 +138,6 @@ class ReferralSystem {
 
             if (treeError) throw treeError;
 
-            // تحديث إحصائيات جميع الأسلاف
             await this.updateAncestorsStats(parentId);
 
         } catch (error) {
@@ -156,7 +145,7 @@ class ReferralSystem {
         }
     }
 
-    // تحديث إحصائيات الأسلاف في الشبكة
+    // Update ancestors statistics
     static async updateAncestorsStats(userId) {
         try {
             const { data: ancestors, error } = await supabase
@@ -176,10 +165,9 @@ class ReferralSystem {
         }
     }
 
-    // تحديث إحصائيات الشبكة لمستخدم معين
+    // Update network statistics for a user
     static async updateNetworkStats(userId) {
         try {
-            // حساب الإحالات المباشرة
             const { count: directCount, error: directError } = await supabase
                 .from('referrals')
                 .select('*', { count: 'exact', head: true })
@@ -188,7 +176,6 @@ class ReferralSystem {
 
             if (directError) throw directError;
 
-            // حساب الإحالات غير المباشرة (الشبكة الكاملة)
             const { data: networkData, error: networkError } = await supabase
                 .from('network_tree')
                 .select('depth')
@@ -196,7 +183,6 @@ class ReferralSystem {
 
             if (networkError) throw networkError;
 
-            // تجميع الإحصائيات حسب المستوى
             const levelStats = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
             if (networkData) {
                 networkData.forEach(item => {
@@ -208,7 +194,6 @@ class ReferralSystem {
 
             const totalNetworkCount = Object.values(levelStats).reduce((a, b) => a + b, 0);
 
-            // تحديث أو إنشاء سجل الإحصائيات
             const { error: upsertError } = await supabase
                 .from('user_network_stats')
                 .upsert({
@@ -232,7 +217,7 @@ class ReferralSystem {
         }
     }
 
-    // الحصول على إحصائيات شبكة المستخدم
+    // Get user network statistics
     static async getUserNetworkStats(userId = null) {
         try {
             const targetUserId = userId || currentUser?.id;
@@ -253,7 +238,7 @@ class ReferralSystem {
         }
     }
 
-    // الحصول على قائمة الإحالات المباشرة
+    // Get direct referrals list
     static async getDirectReferrals(userId = null) {
         try {
             const targetUserId = userId || currentUser?.id;
@@ -281,7 +266,7 @@ class ReferralSystem {
         }
     }
 
-    // الحصول على الشبكة الكاملة (محدودة بالعمق)
+    // Get full network tree (limited by depth)
     static async getFullNetwork(userId = null, maxDepth = 5) {
         try {
             const targetUserId = userId || currentUser?.id;
@@ -309,4 +294,4 @@ class ReferralSystem {
             return [];
         }
     }
-}
+            }1
