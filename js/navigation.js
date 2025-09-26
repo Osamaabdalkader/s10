@@ -1,421 +1,421 @@
-// navigation.js - معدل (مع إضافة صفحة الشبكة وتحسينات الديبجينج)
-class Navigation {
-    static async showPage(pageId, params = {}) {
-        console.log(`جاري تحميل الصفحة: ${pageId}`, params);
-        
-        // إظهار رسالة تحميل
-        document.getElementById('dynamic-content').innerHTML = `
-            <div class="loading-page">
-                <div class="loading-spinner"></div>
-                <p>جاري تحميل الصفحة...</p>
-            </div>
-        `;
-        
+// js/referral.js - نظام إحالة جديد ومحسّن
+class ReferralSystem {
+    // إنشاء رمز إحالة جديد
+    static async createReferralCode(userId) {
         try {
-            await Utils.loadPageContent(pageId);
-            await this.initializePage(pageId, params);
-            console.log(`تم تحميل الصفحة بنجاح: ${pageId}`);
-        } catch (error) {
-            console.error(`فشل في تحميل الصفحة: ${pageId}`, error);
-            this.showErrorPage(error, pageId);
-        }
-    }
+            const code = this.generateReferralCode(8);
+            console.log('🎯 محاولة إنشاء رمز إحالة:', code, 'للمستخدم:', userId);
 
-    static async initializePage(pageId, params = {}) {
-        console.log(`جاري تهيئة الصفحة: ${pageId}`, params);
-        
-        // إعطاء وقت للعناصر لتصبح جاهزة في DOM
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        switch (pageId) {
-            case 'publish':
-                this.handlePublishPage();
-                break;
-            case 'login':
-                this.handleLoginPage();
-                break;
-            case 'register':
-                this.handleRegisterPage();
-                break;
-            case 'profile':
-                this.handleProfilePage();
-                break;
-            case 'home':
-                Posts.loadPosts();
-                break;
-            case 'post-details':
-                this.handlePostDetailsPage(params);
-                break;
-            case 'network':
-                this.handleNetworkPage();
-                break;
-        }
-        
-        // إعادة ربط الأحداث بعد تهيئة الصفحة
-        this.rebindPageEvents(pageId);
-    }
+            const { data, error } = await supabase
+                .from('referral_codes')
+                .insert([{ 
+                    user_id: userId, 
+                    code: code 
+                }])
+                .select()
+                .single();
 
-    // إعادة ربط الأحداث الخاصة بالصفحة
-    static rebindPageEvents(pageId) {
-        console.log(`إعادة ربط أحداث الصفحة: ${pageId}`);
-        
-        // هذه الوظيفة تتعامل مع أي أحداث خاصة تحتاج إلى ربط يدوي
-        // الأحداث الرئيسية تتم معالجتها عبر النظام العالمي في App.js
-    }
-
-    static handlePublishPage() {
-        const publishContent = document.getElementById('publish-content');
-        const loginRequired = document.getElementById('login-required-publish');
-        
-        if (publishContent && loginRequired) {
-            if (!currentUser) {
-                publishContent.style.display = 'none';
-                loginRequired.style.display = 'block';
-            } else {
-                publishContent.style.display = 'block';
-                loginRequired.style.display = 'none';
-            }
-        }
-    }
-
-    static handleLoginPage() {
-        // تنظيف رسائل الحالة عند تحميل الصفحة
-        const statusEl = document.getElementById('login-status');
-        if (statusEl) {
-            statusEl.style.display = 'none';
-        }
-    }
-
-    static handleRegisterPage() {
-        // تنظيف رسائل الحالة عند تحميل الصفحة
-        const statusEl = document.getElementById('register-status');
-        if (statusEl) {
-            statusEl.style.display = 'none';
-        }
-    }
-
-    static handleProfilePage() {
-        const profileContent = document.getElementById('profile-content');
-        const loginRequired = document.getElementById('login-required-profile');
-        
-        if (profileContent && loginRequired) {
-            if (!currentUser) {
-                profileContent.style.display = 'none';
-                loginRequired.style.display = 'block';
-            } else {
-                profileContent.style.display = 'block';
-                loginRequired.style.display = 'none';
-                this.loadProfileData();
-            }
-        }
-    }
-
-    static handlePostDetailsPage(params) {
-        if (params.postId) {
-            PostDetails.loadPostDetails(params.postId);
-        } else {
-            PostDetails.showError();
-        }
-    }
-
-    // معالجة صفحة الشبكة
-    static handleNetworkPage() {
-        const networkContent = document.getElementById('network-content');
-        const loginRequired = document.getElementById('login-required-network');
-        
-        if (networkContent && loginRequired) {
-            if (!currentUser) {
-                networkContent.style.display = 'none';
-                loginRequired.style.display = 'block';
-            } else {
-                networkContent.style.display = 'block';
-                loginRequired.style.display = 'none';
-                this.loadNetworkData();
-            }
-        }
-    }
-
-    static loadProfileData() {
-        if (currentUser) {
-            const setName = (id, value) => {
-                const el = document.getElementById(id);
-                if (el) el.textContent = value;
-            };
-            
-            setName('profile-name', currentUser.user_metadata.full_name || 'غير محدد');
-            setName('profile-email', currentUser.email || 'غير محدد');
-            setName('profile-phone', currentUser.user_metadata.phone || 'غير محدد');
-            setName('profile-address', currentUser.user_metadata.address || 'غير محدد');
-            setName('profile-created', new Date(currentUser.created_at).toLocaleString('ar-SA'));
-        }
-    }
-
-    // تحميل بيانات الشبكة مع ديبجينج موسع
-    static async loadNetworkData() {
-        try {
-            console.log('=== بدء تحميل بيانات الشبكة ===');
-
-            // 1. تحميل أو إنشاء رمز الإحالة
-            console.log('1. جاري تحميل رمز الإحالة...');
-            let referralCode = await ReferralSystem.getUserReferralCode();
-            
-            if (!referralCode) {
-                console.log('2. لا يوجد رمز إحالة، جاري إنشاء رمز جديد...');
-                try {
-                    referralCode = await ReferralSystem.createReferralCode();
-                    console.log('3. تم إنشاء رمز إحالة جديد:', referralCode);
-                } catch (error) {
-                    console.error('4. فشل في إنشاء رمز الإحالة:', error);
+            if (error) {
+                if (error.code === '23505') { // unique violation
+                    console.log('⚠️ المستخدم لديه رمز إحالة بالفعل، جاري جلب الرمز الموجود');
+                    return await this.getUserReferralCode(userId);
                 }
-            } else {
-                console.log('5. تم العثور على رمز إحالة موجود:', referralCode.code);
-            }
-            
-            if (referralCode && referralCode.code) {
-                document.getElementById('referral-code-display').textContent = referralCode.code;
-                console.log('6. تم تعيين رمز الإحالة في الواجهة:', referralCode.code);
-            } else {
-                document.getElementById('referral-code-display').textContent = 'خطأ في التحميل';
-                console.error('7. لم يتم إنشاء أو العثور على رمز إحالة');
+                throw error;
             }
 
-            // 2. تحميل إحصائيات الشبكة
-            console.log('8. جاري تحميل إحصائيات الشبكة...');
-            const stats = await ReferralSystem.getUserNetworkStats();
-            console.log('9. الإحصائيات المستلمة:', stats);
-
-            if (stats) {
-                document.getElementById('direct-referrals-count').textContent = stats.direct_referrals_count || 0;
-                document.getElementById('total-network-count').textContent = stats.total_network_count || 0;
-                
-                const activeLevels = [
-                    stats.level_1_count, 
-                    stats.level_2_count, 
-                    stats.level_3_count, 
-                    stats.level_4_count, 
-                    stats.level_5_count
-                ].filter(count => count > 0).length;
-                
-                document.getElementById('network-levels-count').textContent = activeLevels;
-                console.log('10. تم تحديث الإحصائيات في الواجهة');
-            } else {
-                console.error('11. فشل في تحميل الإحصائيات');
-                document.getElementById('direct-referrals-count').textContent = '0';
-                document.getElementById('total-network-count').textContent = '0';
-                document.getElementById('network-levels-count').textContent = '0';
-            }
-
-            // 3. تحميل الإحالات المباشرة
-            console.log('12. جاري تحميل الإحالات المباشرة...');
-            await this.loadDirectReferrals();
-
-            // 4. تحميل الشجرة الكاملة
-            console.log('13. جاري تحميل الشجرة الكاملة...');
-            await this.loadNetworkTree();
-
-            console.log('=== انتهى تحميل بيانات الشبكة بنجاح ===');
-
+            console.log('✅ تم إنشاء رمز إحالة بنجاح:', data);
+            return data;
         } catch (error) {
-            console.error('!!! خطأ في تحميل بيانات الشبكة:', error);
-            Utils.showStatus('خطأ في تحميل بيانات الشبكة', 'error');
+            console.error('❌ خطأ في إنشاء رمز الإحالة:', error);
+            throw error;
         }
     }
 
-    // تحميل قائمة الإحالات المباشرة
-    static async loadDirectReferrals() {
+    // الحصول على رمز إحالة المستخدم
+    static async getUserReferralCode(userId = null) {
         try {
-            const referrals = await ReferralSystem.getDirectReferrals();
-            const container = document.getElementById('direct-referrals-list');
-            
-            if (!container) {
-                console.error('عنصر direct-referrals-list غير موجود');
-                return;
-            }
-            
-            if (!referrals || referrals.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-users"></i>
-                        <h3>لا توجد إحالات مباشرة بعد</h3>
-                        <p>ابدأ بمشاركة رمز الإحالة الخاص بك لزيادة شبكتك</p>
-                    </div>
-                `;
-                console.log('14. لا توجد إحالات مباشرة');
-                return;
+            const targetUserId = userId || currentUser?.id;
+            if (!targetUserId) {
+                console.log('⚠️ لا يوجد مستخدم مسجل');
+                return null;
             }
 
-            console.log('15. عدد الإحالات المباشرة:', referrals.length);
+            const { data, error } = await supabase
+                .from('referral_codes')
+                .select('*')
+                .eq('user_id', targetUserId)
+                .single();
 
-            let html = '';
-            referrals.forEach((ref, index) => {
-                const user = ref.referred_user;
-                const name = user?.raw_user_meta_data?.full_name || 'مستخدم بدون اسم';
-                const initial = name.charAt(0);
-                const joinDate = new Date(ref.joined_at).toLocaleDateString('ar-SA');
-                
-                console.log(`16. الإحالة ${index + 1}:`, { name, email: user?.email, joinDate });
-                
-                html += `
-                    <div class="referral-item">
-                        <div class="referral-user-info">
-                            <div class="referral-avatar">${initial}</div>
-                            <div class="referral-details">
-                                <h4>${name}</h4>
-                                <p>${user?.email || 'بريد غير متوفر'}</p>
-                            </div>
-                        </div>
-                        <div class="referral-date">${joinDate}</div>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html;
-            console.log('17. تم تحميل قائمة الإحالات المباشرة');
-
-        } catch (error) {
-            console.error('18. خطأ في تحميل الإحالات المباشرة:', error);
-            const container = document.getElementById('direct-referrals-list');
-            if (container) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <h3>خطأ في تحميل الإحالات</h3>
-                        <p>حدث خطأ أثناء تحميل قائمة الإحالات</p>
-                    </div>
-                `;
-            }
-        }
-    }
-
-    // تحميل الشجرة الشبكية
-    static async loadNetworkTree() {
-        try {
-            const network = await ReferralSystem.getFullNetwork();
-            const container = document.getElementById('network-tree');
-            
-            if (!container) {
-                console.error('عنصر network-tree غير موجود');
-                return;
-            }
-            
-            if (!network || network.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-sitemap"></i>
-                        <h3>الشبكة فارغة حالياً</h3>
-                        <p>سيظهر هيكل الشبكة هنا عند وجود إحالات</p>
-                    </div>
-                `;
-                console.log('19. الشبكة فارغة');
-                return;
-            }
-
-            console.log('20. عدد عناصر الشبكة:', network.length);
-
-            // تجميع المستخدمين حسب العمق
-            const levels = {};
-            network.forEach(item => {
-                if (!levels[item.depth]) {
-                    levels[item.depth] = [];
+            if (error) {
+                if (error.code === 'PGRST116') { // no rows
+                    console.log('⚠️ لا يوجد رمز إحالة، جاري إنشاء رمز جديد');
+                    return await this.createReferralCode(targetUserId);
                 }
-                levels[item.depth].push(item);
+                throw error;
+            }
+
+            console.log('✅ تم العثور على رمز إحالة:', data.code);
+            return data;
+        } catch (error) {
+            console.error('❌ خطأ في جلب رمز الإحالة:', error);
+            throw error;
+        }
+    }
+
+    // معالجة الإحالة عند التسجيل
+    static async processReferral(referralCode, newUserId) {
+        try {
+            console.log('🎯 بدء معالجة الإحالة:', {
+                referralCode: referralCode,
+                newUserId: newUserId
             });
 
-            console.log('21. المستويات الموجودة:', Object.keys(levels));
+            if (!referralCode || !newUserId) {
+                console.log('⚠️ بيانات الإحالة ناقصة');
+                return false;
+            }
 
-            let html = '';
-            Object.keys(levels).sort().forEach(depth => {
-                const users = levels[depth];
-                console.log(`22. المستوى ${depth}: ${users.length} مستخدم`);
-                
-                html += `
-                    <div class="network-level">
-                        <div class="level-header">
-                            <strong>المستوى ${parseInt(depth) + 1}</strong> 
-                            <span>(${users.length} عضو)</span>
-                        </div>
-                        <div class="level-users">
-                `;
-                
-                users.forEach((user, userIndex) => {
-                    const userData = user.network_user;
-                    const name = userData?.raw_user_meta_data?.full_name || 'مستخدم بدون اسم';
-                    const initial = name.charAt(0);
-                    
-                    html += `
-                        <div class="user-node">
-                            <div class="user-avatar">${initial}</div>
-                            <div class="user-name">${name}</div>
-                            <div class="user-email">${userData?.email || 'بريد غير متوفر'}</div>
-                        </div>
-                    `;
+            // البحث عن صاحب رمز الإحالة
+            const { data: codeOwner, error: codeError } = await supabase
+                .from('referral_codes')
+                .select('user_id, code')
+                .eq('code', referralCode.toUpperCase().trim())
+                .single();
+
+            if (codeError || !codeOwner) {
+                console.log('❌ رمز الإحالة غير صحيح:', referralCode);
+                return false;
+            }
+
+            const referrerId = codeOwner.user_id;
+            console.log('✅ تم العثور على صاحب الرمز:', referrerId);
+
+            // منع الإحالة الذاتية
+            if (referrerId === newUserId) {
+                console.log('⚠️ لا يمكن الإحالة إلى النفس');
+                return false;
+            }
+
+            // إنشاء سجل الإحالة
+            const { error: referralError } = await supabase
+                .from('referrals')
+                .insert([{
+                    referrer_id: referrerId,
+                    referred_id: newUserId,
+                    referral_code_used: referralCode.toUpperCase().trim()
+                }]);
+
+            if (referralError) {
+                if (referralError.code === '23505') { // already referred
+                    console.log('⚠️ المستخدم لديه إحالة بالفعل');
+                    return true;
+                }
+                throw referralError;
+            }
+
+            console.log('✅ تم إنشاء سجل الإحالة بنجاح');
+
+            // تحديث الشبكة الهرمية
+            await this.updateNetworkHierarchy(newUserId, referrerId);
+            
+            // تحديث الإحصائيات
+            await this.updateNetworkStats(referrerId);
+
+            console.log('🎉 تمت معالجة الإحالة بنجاح');
+            return true;
+
+        } catch (error) {
+            console.error('❌ خطأ في معالجة الإحالة:', error);
+            return false;
+        }
+    }
+
+    // تحديث الهيكل الهرمي للشبكة
+    static async updateNetworkHierarchy(newUserId, referrerId) {
+        try {
+            console.log('🌳 تحديث الهيكل الهرمي:', { newUserId, referrerId });
+
+            // الحصول على عمق المُحيل
+            const { data: referrerData, error: referrerError } = await supabase
+                .from('network_tree')
+                .select('depth')
+                .eq('user_id', referrerId)
+                .single();
+
+            if (referrerError) {
+                console.error('❌ خطأ في جلب بيانات المُحيل:', referrerError);
+                return;
+            }
+
+            const newDepth = (referrerData?.depth || 0) + 1;
+            console.log('📊 عمق المستخدم الجديد:', newDepth);
+
+            // تحديث عمق المستخدم الجديد
+            const { error: updateError } = await supabase
+                .from('network_tree')
+                .update({ 
+                    referrer_id: referrerId,
+                    depth: newDepth
+                })
+                .eq('user_id', newUserId);
+
+            if (updateError) throw updateError;
+
+            console.log('✅ تم تحديث الهيكل الهرمي بنجاح');
+
+        } catch (error) {
+            console.error('❌ خطأ في تحديث الهيكل الهرمي:', error);
+        }
+    }
+
+    // تحديث إحصائيات الشبكة (طريقة جديدة ومحسنة)
+    static async updateNetworkStats(userId) {
+        try {
+            console.log('📈 تحديث إحصائيات الشبكة للمستخدم:', userId);
+
+            // 1. حساب الإحالات المباشرة
+            const { count: directCount, error: directError } = await supabase
+                .from('referrals')
+                .select('*', { count: 'exact', head: true })
+                .eq('referrer_id', userId);
+
+            if (directError) throw directError;
+
+            // 2. حساب الشبكة الكاملة (جميع المستويات)
+            const { data: networkData, error: networkError } = await supabase
+                .from('network_tree')
+                .select('depth')
+                .eq('referrer_id', userId)
+                .lte('depth', 5); // لحد المستوى الخامس فقط
+
+            if (networkError) throw networkError;
+
+            // 3. تجميع الإحصائيات حسب المستوى
+            const levelStats = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+            
+            if (networkData && networkData.length > 0) {
+                networkData.forEach(item => {
+                    const level = item.depth;
+                    if (level >= 1 && level <= 5) {
+                        levelStats[level] = (levelStats[level] || 0) + 1;
+                    }
                 });
-                
-                html += `</div></div>`;
+            }
+
+            // 4. الحساب النهائي
+            const totalNetwork = Object.values(levelStats).reduce((sum, count) => sum + count, 0);
+
+            console.log('📊 الإحصائيات المحسوبة:', {
+                direct: directCount,
+                total: totalNetwork,
+                levels: levelStats
             });
-            
-            container.innerHTML = html;
-            console.log('23. تم تحميل الشجرة الشبكية بنجاح');
+
+            // 5. التحديث في قاعدة البيانات
+            const { error: updateError } = await supabase
+                .from('user_network_stats')
+                .update({
+                    direct_referrals: directCount || 0,
+                    total_network: totalNetwork,
+                    level_1_count: levelStats[1] || 0,
+                    level_2_count: levelStats[2] || 0,
+                    level_3_count: levelStats[3] || 0,
+                    level_4_count: levelStats[4] || 0,
+                    level_5_count: levelStats[5] || 0,
+                    last_updated: new Date().toISOString()
+                })
+                .eq('user_id', userId);
+
+            if (updateError) throw updateError;
+
+            console.log('✅ تم تحديث الإحصائيات بنجاح');
+
+            // 6. تحديث إحصائيات الأسلاف إن أمكن
+            await this.updateAncestorsStats(userId);
 
         } catch (error) {
-            console.error('24. خطأ في تحميل الشجرة الشبكية:', error);
-            const container = document.getElementById('network-tree');
-            if (container) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <h3>خطأ في تحميل الشبكة</h3>
-                        <p>حدث خطأ أثناء تحميل هيكل الشبكة</p>
-                    </div>
-                `;
-            }
+            console.error('❌ خطأ في تحديث الإحصائيات:', error);
         }
     }
 
-    static updateNavigation() {
-        // تحديث عناصر الهيدر
-        const headerElements = {
-            'publish-link': currentUser,
-            'profile-link': currentUser,
-            'network-link': currentUser,
-            'logout-link': currentUser,
-            'login-link': !currentUser,
-            'register-link': !currentUser
+    // تحديث إحصائيات الأسلاف في الشبكة
+    static async updateAncestorsStats(userId) {
+        try {
+            console.log('🔄 تحديث إحصائيات الأسلاف للمستخدم:', userId);
+
+            // إيجاد المُحيل المباشر
+            const { data: userData, error: userError } = await supabase
+                .from('network_tree')
+                .select('referrer_id')
+                .eq('user_id', userId)
+                .single();
+
+            if (userError || !userData || !userData.referrer_id) {
+                console.log('⚠️ لا يوجد أسلاف لتحديث إحصائياتهم');
+                return;
+            }
+
+            let currentReferrerId = userData.referrer_id;
+            let levelsUpdated = 0;
+
+            // تحديث إحصائيات الأسلاف حتى المستوى الخامس
+            while (currentReferrerId && levelsUpdated < 5) {
+                await this.updateNetworkStats(currentReferrerId);
+                levelsUpdated++;
+
+                // الانتقال إلى المُحيل التالي في السلسلة
+                const { data: nextReferrer } = await supabase
+                    .from('network_tree')
+                    .select('referrer_id')
+                    .eq('user_id', currentReferrerId)
+                    .single();
+
+                currentReferrerId = nextReferrer?.referrer_id;
+            }
+
+            console.log(`✅ تم تحديث ${levelsUpdated} مستوى من الأسلاف`);
+
+        } catch (error) {
+            console.error('❌ خطأ في تحديث إحصائيات الأسلاف:', error);
+        }
+    }
+
+    // الحصول على إحصائيات الشبكة
+    static async getUserNetworkStats(userId = null) {
+        try {
+            const targetUserId = userId || currentUser?.id;
+            if (!targetUserId) {
+                console.log('⚠️ لا يوجد مستخدم محدد');
+                return this.getDefaultStats();
+            }
+
+            const { data, error } = await supabase
+                .from('user_network_stats')
+                .select('*')
+                .eq('user_id', targetUserId)
+                .single();
+
+            if (error) {
+                if (error.code === 'PGRST116') { // no rows
+                    console.log('⚠️ لا توجد إحصائيات، جاري إنشاء إحصائيات افتراضية');
+                    return this.getDefaultStats();
+                }
+                throw error;
+            }
+
+            console.log('✅ تم جلب الإحصائيات:', data);
+            return data;
+
+        } catch (error) {
+            console.error('❌ خطأ في جلب الإحصائيات:', error);
+            return this.getDefaultStats();
+        }
+    }
+
+    // الحصول على الإحصائيات الافتراضية
+    static getDefaultStats() {
+        return {
+            direct_referrals: 0,
+            total_network: 0,
+            level_1_count: 0,
+            level_2_count: 0,
+            level_3_count: 0,
+            level_4_count: 0,
+            level_5_count: 0
         };
-
-        for (const [id, shouldShow] of Object.entries(headerElements)) {
-            const element = document.getElementById(id);
-            if (element) {
-                element.style.display = shouldShow ? 'list-item' : 'none';
-            }
-        }
-
-        // تحديث أيقونات الفوتر
-        const footerProfile = document.getElementById('footer-profile-link');
-        const footerPublish = document.getElementById('footer-publish-link');
-        const footerNetwork = document.getElementById('footer-network-link');
-        
-        if (footerProfile) {
-            footerProfile.style.display = currentUser ? 'flex' : 'none';
-        }
-        if (footerPublish) {
-            footerPublish.style.display = currentUser ? 'flex' : 'none';
-        }
-        if (footerNetwork) {
-            footerNetwork.style.display = currentUser ? 'flex' : 'none';
-        }
-
-        console.log('25. تم تحديث التنقل، المستخدم:', currentUser ? 'مسجل الدخول' : 'غير مسجل');
     }
 
-    static showErrorPage(error, pageId) {
-        document.getElementById('dynamic-content').innerHTML = `
-            <div class="error-page">
-                <h1 class="section-title">خطأ في تحميل الصفحة</h1>
-                <p>تعذر تحميل الصفحة المطلوبة: ${pageId}</p>
-                <p>الخطأ: ${error.message}</p>
-                <button onclick="Navigation.showPage('home')">العودة إلى الرئيسية</button>
-            </div>
-        `;
+    // الحصول على الإحالات المباشرة
+    static async getDirectReferrals(userId = null) {
+        try {
+            const targetUserId = userId || currentUser?.id;
+            if (!targetUserId) return [];
+
+            const { data, error } = await supabase
+                .from('referrals')
+                .select(`
+                    *,
+                    referred_user:referred_id(
+                        email,
+                        raw_user_meta_data,
+                        created_at
+                    )
+                `)
+                .eq('referrer_id', targetUserId)
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+
+            console.log(`✅ تم جلب ${data?.length || 0} إحالة مباشرة`);
+            return data || [];
+
+        } catch (error) {
+            console.error('❌ خطأ في جلب الإحالات المباشرة:', error);
+            return [];
+        }
     }
-                               }
+
+    // الحصول على الشبكة الكاملة
+    static async getFullNetwork(userId = null) {
+        try {
+            const targetUserId = userId || currentUser?.id;
+            if (!targetUserId) return [];
+
+            const { data, error } = await supabase
+                .from('network_tree')
+                .select(`
+                    *,
+                    network_user:user_id(
+                        email,
+                        raw_user_meta_data,
+                        created_at
+                    ),
+                    referrer:referrer_id(
+                        email,
+                        raw_user_meta_data
+                    )
+                `)
+                .eq('referrer_id', targetUserId)
+                .lte('depth', 5)
+                .order('depth', { ascending: true })
+                .order('created_at', { ascending: true });
+
+            if (error) throw error;
+
+            console.log(`✅ تم جلب ${data?.length || 0} عنصر في الشبكة`);
+            return data || [];
+
+        } catch (error) {
+            console.error('❌ خطأ في جلب الشبكة الكاملة:', error);
+            return [];
+        }
+    }
+
+    // توليد رمز إحالة عشوائي
+    static generateReferralCode(length = 8) {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+    }
+
+    // التحقق من صحة رمز الإحالة
+    static async validateReferralCode(code) {
+        try {
+            if (!code || code.length < 6) return false;
+
+            const { data, error } = await supabase
+                .from('referral_codes')
+                .select('user_id, code')
+                .eq('code', code.toUpperCase().trim())
+                .single();
+
+            return !error && data !== null;
+        } catch (error) {
+            console.error('❌ خطأ في التحقق من رمز الإحالة:', error);
+            return false;
+        }
+    }
+                }
