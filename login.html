@@ -1,0 +1,23 @@
+<!-- login.html -->
+<section id="login-page" class="page">
+    <div class="auth-form">
+        <h1 class="section-title">تسجيل الدخول</h1>
+        <div id="login-status" class="upload-status"></div>
+        <form id="login-form">
+            <div class="form-group form-icon">
+                <label for="email"><i class="fas fa-envelope"></i> البريد الإلكتروني:</label>
+                <input type="email" id="login-email" name="email" required>
+                <!-- تم إضافة name="email" -->
+            </div>
+            <div class="form-group form-icon">
+                <label for="password"><i class="fas fa-lock"></i> كلمة المرور:</label>
+                <input type="password" id="login-password" name="password" required>
+                <!-- تم إضافة name="password" -->
+            </div>
+            <button type="submit"><i class="fas fa-sign-in-alt"></i> تسجيل الدخول</button>
+        </form>
+        <p style="margin-top: 20px; text-align: center;">
+            لا تملك حساباً؟ <a href="#" onclick="Navigation.showPage('register')">إنشاء حساب جديد</a>
+        </p>
+    </div>
+</section>

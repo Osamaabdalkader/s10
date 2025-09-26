@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>منصة تسريع الإلكترونية</title>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <base href="./">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">
+                    <i class="fas fa-bolt"></i>
+                    منصة تسريع الإلكترونية
+                </div>
+                <ul class="nav-links">
+                    <li><a href="#" onclick="Navigation.showPage('home')"><i class="fas fa-home"></i> <span class="nav-text">الرئيسية</span></a></li>
+                    <li id="network-link" style="display: none;"><a href="#" onclick="Navigation.showPage('network')"><i class="fas fa-network-wired"></i> <span class="nav-text">شبكتي</span></a></li>
+                    <li id="login-link"><a href="#" onclick="Navigation.showPage('login')"><i class="fas fa-sign-in-alt"></i> <span class="nav-text">تسجيل الدخول</span></a></li>
+                    <li id="register-link"><a href="#" onclick="Navigation.showPage('register')"><i class="fas fa-user-plus"></i> <span class="nav-text">إنشاء حساب</span></a></li>
+                    <li id="logout-link" style="display: none;"><a href="#" onclick="Auth.logout()"><i class="fas fa-sign-out-alt"></i> <span class="nav-text">تسجيل الخروج</span></a></li>
+                    <li><a href="#" onclick="App.toggleDebug()"><i class="fas fa-bug"></i> <span class="nav-text">تصحيح الأخطاء</span></a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div id="connection-status" class="connection-status"></div>
+        <div id="dynamic-content"></div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-icons">
+                <a href="#" onclick="Navigation.showPage('profile')" id="footer-profile-link" style="display: none;">
+                    <i class="fas fa-user"></i>
+                    <span>حسابي</span>
+                </a>
+                <a href="#" onclick="Navigation.showPage('network')" id="footer-network-link" style="display: none;">
+                    <i class="fas fa-network-wired"></i>
+                    <span>شبكتي</span>
+                </a>
+                <a href="#" onclick="Navigation.showPage('publish')" id="footer-publish-link" style="display: none;">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>نشر</span>
+                </a>
+                <a href="javascript:void(0)" onclick="alert('هذه الصفحة قيد التطوير')">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>السلة</span>
+                </a>
+                <a href="javascript:void(0)" onclick="alert('هذه الصفحة قيد التطوير')">
+                    <i class="fas fa-headset"></i>
+                    <span>الدعم</span>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- تحميل ملفات JavaScript بالترتيب الصحيح -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/referral.js"></script>
+    <script src="js/posts.js"></script>
+    <script src="js/postDetails.js"></script>
+    <script src="js/eventHandlers.js"></script>
+    <script src="js/formHandlers.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

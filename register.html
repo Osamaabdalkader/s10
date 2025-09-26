@@ -1,0 +1,44 @@
+<!-- register.html - معدل -->
+<section id="register-page" class="page">
+    <div class="auth-form">
+        <h1 class="section-title">إنشاء حساب جديد</h1>
+        <div id="register-status" class="upload-status"></div>
+        <form id="register-form">
+            <div class="form-group form-icon">
+                <label for="name"><i class="fas fa-user"></i> الاسم:</label>
+                <input type="text" id="register-name" name="name" required>
+            </div>
+            <div class="form-group form-icon">
+                <label for="phone"><i class="fas fa-phone"></i> رقم الهاتف:</label>
+                <input type="tel" id="register-phone" name="phone" required>
+            </div>
+            <div class="form-group form-icon">
+                <label for="address"><i class="fas fa-map-marker-alt"></i> العنوان:</label>
+                <input type="text" id="register-address" name="address" required>
+            </div>
+            <div class="form-group form-icon">
+                <label for="email"><i class="fas fa-envelope"></i> البريد الإلكتروني:</label>
+                <input type="email" id="register-email" name="email" required>
+            </div>
+            <div class="form-group form-icon">
+                <label for="password"><i class="fas fa-lock"></i> كلمة المرور:</label>
+                <input type="password" id="register-password" name="password" required>
+            </div>
+            <div class="form-group form-icon">
+                <label for="confirm-password"><i class="fas fa-lock"></i> تأكيد كلمة المرور:</label>
+                <input type="password" id="register-confirm-password" name="confirmPassword" required>
+            </div>
+            
+            <!-- إضافة حقل رمز الإحالة -->
+            <div class="form-group form-icon">
+                <label for="referral-code"><i class="fas fa-user-friends"></i> رمز الإحالة (اختياري):</label>
+                <input type="text" id="register-referral-code" name="referralCode" placeholder="أدخل رمز الإحالة إذا كان لديك">
+            </div>
+            
+            <button type="submit"><i class="fas fa-user-plus"></i> إنشاء حساب</button>
+        </form>
+        <p style="margin-top: 20px; text-align: center;">
+            لديك حساب بالفعل؟ <a href="#" onclick="Navigation.showPage('login')">تسجيل الدخول</a>
+        </p>
+    </div>
+</section>

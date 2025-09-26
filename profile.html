@@ -1,0 +1,35 @@
+<!-- صفحة حسابي -->
+<section id="profile-page" class="page">
+    <h1 class="section-title">حسابي</h1>
+    <div id="profile-content">
+        <div class="profile-card">
+            <div class="profile-info">
+                <div class="profile-label"><i class="fas fa-user"></i> الاسم:</div>
+                <div id="profile-name"></div>
+            </div>
+            <div class="profile-info">
+                <div class="profile-label"><i class="fas fa-envelope"></i> البريد الإلكتروني:</div>
+                <div id="profile-email"></div>
+            </div>
+            <div class="profile-info">
+                <div class="profile-label"><i class="fas fa-phone"></i> رقم الهاتف:</div>
+                <div id="profile-phone"></div>
+            </div>
+            <div class="profile-info">
+                <div class="profile-label"><i class="fas fa-map-marker-alt"></i> العنوان:</div>
+                <div id="profile-address"></div>
+            </div>
+            <div class="profile-info">
+                <div class="profile-label"><i class="fas fa-calendar-alt"></i> تاريخ إنشاء الحساب:</div>
+                <div id="profile-created"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="login-required-profile" class="login-required" style="display: none;">
+        <h2>يجب تسجيل الدخول لعرض الملف الشخصي</h2>
+        <p>يجب أن تكون مسجلاً في الموقع لعرض معلومات حسابك.</p>
+        <button onclick="showPage('login')"><i class="fas fa-sign-in-alt"></i> تسجيل الدخول</button>
+        <button onclick="showPage('register')" class="btn-secondary"><i class="fas fa-user-plus"></i> إنشاء حساب</button>
+    </div>
+</section>
